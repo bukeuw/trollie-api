@@ -24,6 +24,7 @@ Route::middleware(['api'])->group(function () {
 
     Route::apiResource('boards', 'BoardController')->only([
         'index',
+        'show',
         'store',
         'update',
     ]);

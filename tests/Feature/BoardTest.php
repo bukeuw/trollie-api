@@ -64,4 +64,19 @@ class BoardTest extends TestCase
 
         $this->assertDatabaseHas('boards', $data);
     }
+
+    public function testfindBoardById()
+    {
+        $boards = factory(Board::class, 10)->create();
+        $board = $boards->first();
+
+        $response = $this->getJson("/api/boards/$board->id");
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'data' => [],
+        ]);
+        $response->assertJson([
+            'data' => $board->toArray(),
+        ]);
+    }
 }

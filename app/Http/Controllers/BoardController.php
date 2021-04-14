@@ -52,4 +52,13 @@ class BoardController extends Controller
             'data' => $board,
         ]);
     }
+
+    public function show($boardId)
+    {
+        $board = Board::findOrFail($boardId);
+
+        return response()->json([
+            'data' => $board,
+        ]);
+    }
 }
