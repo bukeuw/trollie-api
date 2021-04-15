@@ -28,4 +28,11 @@ Route::middleware(['api'])->group(function () {
         'store',
         'update',
     ]);
+
+    Route::apiResource('lists', 'ListController')->only([
+        'index',
+        'show',
+        'store',
+        'update',
+    ]);
 });

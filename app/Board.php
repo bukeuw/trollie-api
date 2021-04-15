@@ -11,8 +11,8 @@ class Board extends Model
         'color',
     ];
 
-    public function cards()
+    public function lists()
     {
-        return $this->hasMany(Card::class);
+        return $this->hasMany(ListModel::class);
     }
 }

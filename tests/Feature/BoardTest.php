@@ -63,6 +63,12 @@ class BoardTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('boards', $data);
+
+        $board->refresh();
+        $this->assertEquals($data, [
+            'title' => $board->title,
+            'color' => $board->color,
+        ]);
     }
 
     public function testfindBoardById()
