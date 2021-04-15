@@ -17,7 +17,7 @@ class CreateCardsTable extends Migration
             $table->bigIncrements('id');
             $table->string('title');
             $table->text('description');
-            $table->unsignedBigInteger('board_id');
+            $table->unsignedBigInteger('list_id');
             $table->timestamps();
         });
     }

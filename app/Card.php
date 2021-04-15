@@ -9,11 +9,12 @@ class Card extends Model
     protected $fillable = [
         'title',
         'description',
+        'list_id',
     ];
 
-    public function board()
+    public function list()
     {
-        return $this->belongsTo(Board::class);
+        return $this->belongsTo(ListModel::class, 'list_id');
     }
 
     public function statuses()
