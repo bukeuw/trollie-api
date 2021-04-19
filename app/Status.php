@@ -8,6 +8,7 @@ class Status extends Model
 {
     protected $fillable = [
         'title',
+        'color_classes',
     ];
 
     public function cards()

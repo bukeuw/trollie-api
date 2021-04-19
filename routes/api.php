@@ -42,4 +42,12 @@ Route::middleware(['api'])->group(function () {
         'store',
         'update',
     ]);
+
+    Route::apiResource('statuses', 'StatusController')->only([
+        'index',
+        'show',
+        'store',
+        'update',
+    ]);
+    Route::post('statuses/toggle', 'StatusController@toggleStatus');
 });
