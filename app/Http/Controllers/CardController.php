@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Card;
 use App\Http\Requests\CardRequest;
+use App\Http\Requests\CardUpdateRequest;
 use App\ListModel;
 use Illuminate\Http\Request;
 
@@ -54,11 +55,13 @@ class CardController extends Controller
         ]);
     }
 
-    public function update(CardRequest $request, $cardId)
+    public function update(CardUpdateRequest $request, $cardId)
     {
         $card = Card::findOrFail($cardId);
 
-        $card->title = $request->title;
+        if ($request->has('title')) {
+            $card->title = $request->title;
+        }
 
         if ($request->has('description')) {
             $card->description = $request->description;
