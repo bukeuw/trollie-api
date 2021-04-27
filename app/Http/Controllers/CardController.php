@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Card;
+use App\Http\Requests\CardDueDateRequest;
 use App\Http\Requests\CardRequest;
 use App\Http\Requests\CardUpdateRequest;
 use App\ListModel;
@@ -75,6 +76,44 @@ class CardController extends Controller
 
         return response()->json([
             'data' => $card,
+        ]);
+    }
+
+    public function addDueDate(CardDueDateRequest $request, $cardId)
+    {
+        $card = Card::findOrFail($cardId);
+
+        $isUpdated = $card->update([
+            'due_date' => $request->due_date,
+        ]);
+
+        if (!$isUpdated) {
+            return response()->json([
+                'error' => 'cannot set due date',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
+    public function removeDueDate($cardId)
+    {
+        $card = Card::findOrFail($cardId);
+
+        $isUpdated = $card->update([
+            'due_date' => null,
+        ]);
+
+        if (!$isUpdated) {
+            return response()->json([
+                'error' => 'cannot remove due date',
+            ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
         ]);
     }
 }

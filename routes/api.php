@@ -43,6 +43,9 @@ Route::middleware(['api'])->group(function () {
         'update',
     ]);
 
+    Route::post('cards/{id}/due-date', 'CardController@addDueDate');
+    Route::delete('cards/{id}/due-date', 'CardController@removeDueDate');
+
     Route::apiResource('statuses', 'StatusController')->only([
         'index',
         'show',

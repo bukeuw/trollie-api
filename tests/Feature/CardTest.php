@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Card;
 use App\ListModel;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
@@ -82,5 +83,34 @@ class CardTest extends TestCase
             'description' => $card->description,
             'list_id' => $card->list_id,
         ]);
+    }
+
+    public function testAddDueDate()
+    {
+        factory(ListModel::class)->create();
+        $card = factory(Card::class)->create();
+        $data = [
+            'due_date' => Carbon::now()->addHours(4)->toString(),
+        ];
+
+        $response = $this->postJson("/api/cards/$card->id/due-date", $data);
+        $response->assertStatus(200);
+
+        $card->refresh();
+        $this->assertEquals($data['due_date'], $card->due_date);
+    }
+
+    public function testRemoveDueDate()
+    {
+        factory(ListModel::class)->create();
+        $card = factory(Card::class)->create([
+            'due_date' => Carbon::now()->addHours(4),
+        ]);
+
+        $response = $this->deleteJson("/api/cards/$card->id/due-date");
+        $response->assertStatus(200);
+
+        $card->refresh();
+        $this->assertNull($card->due_date);
     }
 }

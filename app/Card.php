@@ -10,6 +10,7 @@ class Card extends Model
         'title',
         'description',
         'list_id',
+        'due_date',
     ];
 
     public function list()
