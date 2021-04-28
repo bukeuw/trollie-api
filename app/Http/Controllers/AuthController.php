@@ -3,9 +3,12 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Pusher\Pusher;
 
 class AuthController extends Controller
 {
+    protected $pusher = null;
      /**
      * Create a new AuthController instance.
      *
@@ -14,6 +17,16 @@ class AuthController extends Controller
     public function __construct()
     {
         $this->middleware('auth:api', ['except' => ['login']]);
+
+        $this->pusher = new Pusher(
+            env('PUSHER_APP_KEY', ''),
+            env('PUSHER_APP_SECRET', ''),
+            env('PUSHER_APP_ID', ''),
+            [
+                'useTLS' => true,
+                'cluster' => env('PUSHER_APP_CLUSTER', ''),
+            ]
+        );
     }
 
     /**
@@ -78,5 +91,24 @@ class AuthController extends Controller
             'token_type' => 'bearer',
             'expires_in' => 720 * 60,
         ]);
+    }
+
+    public function authenticateChannel(Request $request)
+    {
+        if (Auth::check() && $request->has(['socket_id', 'channel_name'])) {
+            $socketId = $request->input('socket_id');
+            $channelName = $request->input('channel_name');
+            $user = Auth::user();
+            $userInfo = [
+                'name' => $user->name,
+                'email' => $user->email,
+            ];
+
+            return $this->pusher->presence_auth($channelName, $socketId, $user->id, $userInfo);
+        }
+
+        return response()->json([
+            'error' => 'Unauthorized'
+        ], 401);
     }
 }

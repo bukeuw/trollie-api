@@ -11,6 +11,8 @@
 |
 */
 
+Route::post('broadcasting/auth', 'AuthController@authenticateChannel');
+
 Route::get('/', function () {
     return view('welcome');
 });
