@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Card;
 use App\Http\Requests\CardDueDateRequest;
+use App\Http\Requests\CardMemberRequest;
 use App\Http\Requests\CardRequest;
 use App\Http\Requests\CardUpdateRequest;
 use App\ListModel;
@@ -23,33 +24,6 @@ class CardController extends Controller
             $cards = Card::all();
         }
 
-        $cards = $cards->map(function ($card, $key) {
-            $users = $card->users->map(function ($user, $key) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ];
-            });
-
-            $statuses = $card->statuses->map(function ($status, $key) {
-                return [
-                    'id' => $status->id,
-                    'title' => $status->title,
-                    'color_classes' => $status->color_classes,
-                ];
-            });
-
-            return [
-                'id' => $card->id,
-                'title' => $card->title,
-                'description' => $card->description,
-                'due_date' => $card->due_date,
-                'list_id' => $card->list_id,
-                'statuses' => $statuses->toArray(),
-                'users' => $users->toArray(),
-            ];
-        });
-
         return response()->json([
             'data' => $cards->toArray(),
         ]);
@@ -59,8 +33,31 @@ class CardController extends Controller
     {
         $card = Card::findOrFail($cardId);
 
+        $users = $card->users->map(function ($user, $key) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+            ];
+        });
+
+        $statuses = $card->statuses->map(function ($status, $key) {
+            return [
+                'id' => $status->id,
+                'title' => $status->title,
+                'color_classes' => $status->color_classes,
+            ];
+        });
+
         return response()->json([
-            'data' => $card,
+            'data' => [
+                'id' => $card->id,
+                'title' => $card->title,
+                'description' => $card->description,
+                'due_date' => $card->due_date,
+                'list_id' => $card->list_id,
+                'statuses' => $statuses->toArray(),
+                'users' => $users->toArray(),
+            ],
         ]);
     }
 
@@ -137,6 +134,26 @@ class CardController extends Controller
             return response()->json([
                 'error' => 'cannot remove due date',
             ], 400);
+        }
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
+    public function toggleMembership(CardMemberRequest $request, $cardId)
+    {
+        $card = Card::findOrFail($cardId);
+
+        $userId = $request->user_id;
+        $hasUser = $card->users()
+                          ->where('user_id', $userId)
+                          ->count();
+
+        if ($hasUser) {
+            $card->users()->detach($userId);
+        } else {
+            $card->users()->attach($userId);
         }
 
         return response()->json([

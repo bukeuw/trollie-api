@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Card;
 use App\ListModel;
+use App\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
@@ -24,32 +25,8 @@ class CardTest extends TestCase
         $response = $this->getJson("/api/cards?list_id=$list->id");
 
         $response->assertStatus(200);
-        $cards = $list->cards->map(function ($card, $key) {
-            $users = $card->users->map(function ($user, $key) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ];
-            });
 
-            $statuses = $card->statuses->map(function ($status, $key) {
-                return [
-                    'id' => $status->id,
-                    'title' => $status->title,
-                    'color_classes' => $status->color_classes,
-                ];
-            });
-
-            return [
-                'id' => $card->id,
-                'title' => $card->title,
-                'description' => $card->description,
-                'due_date' => $card->due_date,
-                'list_id' => $card->list_id,
-                'statuses' => $statuses->toArray(),
-                'users' => $users->toArray(),
-            ];
-        });
+        $cards = $list->cards;
         $response->assertJson([
             'data' => $cards->toArray(),
         ]);
@@ -65,8 +42,31 @@ class CardTest extends TestCase
 
         $response = $this->getJson("/api/cards/$firstCard->id");
         $response->assertStatus(200);
+
+        $users = $firstCard->users->map(function ($user, $key) {
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+            ];
+        });
+
+        $statuses = $firstCard->statuses->map(function ($status, $key) {
+            return [
+                'id' => $status->id,
+                'title' => $status->title,
+                'color_classes' => $status->color_classes,
+            ];
+        });
         $response->assertJson([
-            'data' => $firstCard->toArray(),
+            'data' => [
+                'id' => $firstCard->id,
+                'title' => $firstCard->title,
+                'description' => $firstCard->description,
+                'due_date' => $firstCard->due_date,
+                'list_id' => $firstCard->list_id,
+                'statuses' => $statuses->toArray(),
+                'users' => $users->toArray(),
+            ],
         ]);
     }
 
@@ -138,5 +138,44 @@ class CardTest extends TestCase
 
         $card->refresh();
         $this->assertNull($card->due_date);
+    }
+
+    public function testMemberJoinCard()
+    {
+        factory(ListModel::class)->create();
+        $user = factory(User::class)->create();
+        $card = factory(Card::class)->create();
+
+        $data = [
+            'user_id' => $user->id,
+        ];
+
+        $response = $this->postJson("/api/cards/$card->id/membership", $data);
+        $response->assertStatus(200);
+
+        $this->assertDatabaseHas('card_user', [
+            'card_id' => $card->id,
+            'user_id' => $user->id,
+        ]);
+    }
+
+    public function testMemberLeaveCard()
+    {
+        factory(ListModel::class)->create();
+        $user = factory(User::class)->create();
+        $card = factory(Card::class)->create();
+        $card->users()->attach($user->id);
+
+        $data = [
+            'user_id' => $user->id,
+        ];
+
+        $response = $this->postJson("/api/cards/$card->id/membership", $data);
+        $response->assertStatus(200);
+
+        $this->assertDatabaseMissing('card_user', [
+            'card_id' => $card->id,
+            'user_id' => $user->id,
+        ]);
     }
 }

@@ -55,4 +55,5 @@ Route::middleware(['api'])->group(function () {
     Route::post('statuses/toggle', 'StatusController@toggleStatus');
 
     Route::get('users', 'UserController@index');
+    Route::post('cards/{id}/membership', 'CardController@toggleMembership');
 });
