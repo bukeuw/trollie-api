@@ -24,8 +24,34 @@ class CardTest extends TestCase
         $response = $this->getJson("/api/cards?list_id=$list->id");
 
         $response->assertStatus(200);
+        $cards = $list->cards->map(function ($card, $key) {
+            $users = $card->users->map(function ($user, $key) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ];
+            });
+
+            $statuses = $card->statuses->map(function ($status, $key) {
+                return [
+                    'id' => $status->id,
+                    'title' => $status->title,
+                    'color_classes' => $status->color_classes,
+                ];
+            });
+
+            return [
+                'id' => $card->id,
+                'title' => $card->title,
+                'description' => $card->description,
+                'due_date' => $card->due_date,
+                'list_id' => $card->list_id,
+                'statuses' => $statuses->toArray(),
+                'users' => $users->toArray(),
+            ];
+        });
         $response->assertJson([
-            'data' => $list->cards->toArray(),
+            'data' => $cards->toArray(),
         ]);
     }
 

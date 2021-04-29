@@ -22,4 +22,9 @@ class Card extends Model
     {
         return $this->belongsToMany(Status::class);
     }
+
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
 }
