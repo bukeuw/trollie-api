@@ -53,4 +53,6 @@ Route::middleware(['api'])->group(function () {
         'update',
     ]);
     Route::post('statuses/toggle', 'StatusController@toggleStatus');
+
+    Route::get('users', 'UserController@index');
 });
