@@ -4,11 +4,13 @@ namespace Tests\Feature;
 
 use App\Card;
 use App\ListModel;
+use App\Notifications\CardMoveNotification;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Foundation\Testing\WithoutMiddleware;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class CardTest extends TestCase
@@ -88,6 +90,8 @@ class CardTest extends TestCase
 
     public function testUpdateCard()
     {
+        Notification::fake();
+        $user = factory(User::class)->create();
         $list = factory(ListModel::class)->create();
         $card = factory(Card::class)->create();
         $data = [
@@ -96,7 +100,8 @@ class CardTest extends TestCase
             'list_id' => $list->id,
         ];
 
-        $response = $this->patchJson("/api/cards/$card->id", $data);
+        $response = $this->actingAs($user)
+                         ->patchJson("/api/cards/$card->id", $data);
         $response->assertStatus(200);
         $response->assertJsonStructure([
             'data' => [],
@@ -109,6 +114,7 @@ class CardTest extends TestCase
             'description' => $card->description,
             'list_id' => $card->list_id,
         ]);
+        Notification::assertNothingSent();
     }
 
     public function testAddDueDate()
@@ -177,5 +183,50 @@ class CardTest extends TestCase
             'card_id' => $card->id,
             'user_id' => $user->id,
         ]);
+    }
+
+    public function testMoveCardNotification()
+    {
+        Notification::fake();
+        $users = factory(User::class, 10)->create();
+        $firstUser = $users->first();
+        $list = factory(ListModel::class)->create();
+        $card = factory(Card::class)->create();
+        $data = [
+            'title' => $this->faker->sentence,
+            'description' => $this->faker->paragraph,
+            'list_id' => $list->id,
+        ];
+
+        $users->each(function ($user, $key) use ($card) {
+            $card->users()->attach($user->id);
+        });
+
+        $response = $this->actingAs($firstUser)
+                         ->patchJson("/api/cards/$card->id", $data);
+        $response->assertJson([
+            'data' => [],
+        ]);
+        $response->assertStatus(200);
+        $response->assertJsonStructure([
+            'data' => [],
+        ]);
+        $this->assertDatabaseHas('cards', $data);
+
+        $card->refresh();
+        $this->assertEquals($data, [
+            'title' => $card->title,
+            'description' => $card->description,
+            'list_id' => $card->list_id,
+        ]);
+
+        $senderList = $card->users()
+             ->where('user_id', '<>', auth()->user()->id)
+             ->get();
+
+        Notification::assertSentTo(
+            $senderList,
+            CardMoveNotification::class
+        );
     }
 }

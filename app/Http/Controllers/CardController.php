@@ -8,6 +8,7 @@ use App\Http\Requests\CardMemberRequest;
 use App\Http\Requests\CardRequest;
 use App\Http\Requests\CardUpdateRequest;
 use App\ListModel;
+use App\Notifications\CardMoveNotification;
 use Illuminate\Http\Request;
 
 class CardController extends Controller
@@ -93,6 +94,21 @@ class CardController extends Controller
         }
 
         if ($request->has('list_id')) {
+            if ($card->users) {
+                $listData = [
+                    'from' => $card->list_id,
+                    'to' => $request->list_id,
+                ];
+
+                $users = $card->users()
+                     ->where('user_id', '<>', auth()->user()->id)
+                     ->get();
+
+                $users->each(function ($user, $key) use ($card, $listData) {
+                    $user->notify(new CardMoveNotification($card, $listData));
+                });
+            }
+
             $card->list_id = $request->list_id;
         }
 
