@@ -50,8 +50,10 @@ class CardMoveNotification extends Notification
      */
     public function toArray($notifiable)
     {
+        $user = auth()->user();
+
         return [
-            'user_id' => $notifiable->id,
+            'user_id' => $user->id,
             'card_id' => $this->card->id,
             'from' => $this->fromList,
             'to' => $this->toList,
