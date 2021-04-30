@@ -56,4 +56,5 @@ Route::middleware(['api'])->group(function () {
 
     Route::get('users', 'UserController@index');
     Route::post('cards/{id}/membership', 'CardController@toggleMembership');
+    Route::get('users/{id}/notifications', 'UserController@getNotifications');
 });

@@ -39,7 +39,7 @@ class CardMoveNotification extends Notification
      */
     public function via($notifiable)
     {
-        return ['array'];
+        return ['database'];
     }
 
     /**
